@@ -5,6 +5,9 @@
 const express = require('express');
 const app = express();
 const morgan = require('morgan');
+const path = require('path');
+const { mongoose } = require('./database');
+
 //settings
 //toma el puerto que esta configurado en nuestra app en el sistema operativo 
 //cuando desplegamos en servicios en la nube, entonces que tome automaticamente el puerto 
@@ -23,10 +26,15 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 //routes
-app.use(require('./routes/task.routes'));
+app.use('/api/users' ,require('./routes/user.routes'));
+app.use('/api/tasks' ,require('./routes/task.routes'));
 
 //statics files
-
+//con la funcion path, unimos dirname con la carpeta public
+// de esta forma encontramos la ruta hasta public
+// que remos llegar hasta el archivo HTML que esta en public 
+// en ese archivo despues de llama a la aplicacion react
+app.use(express.static(path.join(__dirname, 'public')));
 
 //starting the server 
 
