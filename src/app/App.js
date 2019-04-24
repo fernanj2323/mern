@@ -9,7 +9,8 @@ class App extends Component {
 		this.state = { //con esto decimos que cuando empiece la aplicacion todos los datos en blanco 
 			title: '',
 			description: '',
-			tasks: []
+			tasks: [],
+			_id: ''
 		};
 		this.addTask = this.addTask.bind(this);
 		this.handleChangue = this.handleChangue.bind(this);
@@ -19,7 +20,34 @@ class App extends Component {
 // en este caso api tasks 
 // de esta forma hacemos un evento de guardado 																		
 addTask(e) {
-	fetch('/api/tasks', {
+	// si desde el estado estamos obteniendo un ID tenemos que hacer una actualizacion. EDIT 
+	if(this.state._id){
+		fetch(`/api/tasks/${this.state._id}`, {
+			method	: 'PUT', 	//metodo PUT porue es un EDIT 
+			body : JSON.stringify(this.state),
+			headers: {
+			//de esta forma expresamos que el tipo de contenido es de un formato json 
+
+			'Accept': 'application/json',
+			'Content-Type': 'application/json'
+		}
+
+		})
+//cuando lo tenga voy a convertir esa respuesta en formato JSON 
+.then(res => res.json())
+.then(data => {
+
+	console.log(data);
+	M.toast({html: 'actividad editada'});
+	//hacemos que todo vuelva a en blanco para que se muestre bien 
+	//para que el ID quede en blanco nuevamente y se pueda distinguir cuando se hace un EDIT o un ADD 
+	this.setState({title: '', description:'', _id:''}); 
+	this.fetchTasks();
+});
+  
+//si por lo contrario no estoy recibiendo un ID vamos a guardar los datos porque es un ingreso nuevo. ADD
+	}else {
+		fetch('/api/tasks', {
 		method: 'POST',
 		body: JSON.stringify(this.state),
 		headers: {
@@ -35,7 +63,7 @@ addTask(e) {
 
 		console.log(data)
 		//llamamos a una variable global de Materialize que nos permite mostrar mensajes por pantalla 
-		M.toast({html: 'Task Saved'});
+		M.toast({html: 'Actividad registrada'});
 		//de esta forma limpiamos 
 		this.setState({title: '', description: '' });
 		this.fetchTasks();
@@ -43,6 +71,8 @@ addTask(e) {
 	.catch(err => console.error(err));
 /*
 	console.log(this.state);*/
+
+	}
 	e.preventDefault();
 }
 
@@ -51,7 +81,7 @@ componentDidMount() {
 	this.fetchTasks();
 }
 
-fetchTasks(){
+fetchTasks(){ // esto es lo que ejecutamos para actualizar la lista
 	//aqui no es necesario definir el metodo de la peticion si es GET/POST
 	//como en addTask ya que por default se envia en GET 
 
@@ -68,6 +98,9 @@ fetchTasks(){
 }
 
 deleteTask(id){
+	if(confirm('Estas seguro que deseas eliminar esta actividad?')){
+
+
 	console.log('deleting', id);
 	//concatenamos 				
 	/*fetch('/api/tasks/' + id)*/
@@ -83,8 +116,29 @@ deleteTask(id){
 		}
 	})
 	.then(res => res.json())
-	.then(data => console.log(data));	
+	.then(data => {
+		console.log(data);
+		//llamamos a una variable global de Materialize que nos permite mostrar mensajes por pantalla 
+		M.toast({html: 'Actividad Eliminada'});
 		this.fetchTasks();
+});
+}}
+
+editTask(id){
+
+	fetch(`/api/tasks/${id}`)
+	// cuando me responda el servidor la converitmos en formato json 
+	.then(res => res.json())
+	//luego quiero que me muestre por consola lo que he obtenido 
+	.then(data => {
+
+		console.log(data)
+		this.setState({
+			title: data.title,
+			description: data.description,
+			_id: data._id
+		})
+		});
 }
 
 /*esta funcion nos permite capturar los cambios que estamos ingresando */
@@ -110,8 +164,8 @@ handleChangue(e) {
 	</nav>
 	<div className="container">
 		<div className="row">
-			<div className="row">
-				<div className="col s5">
+			<div className="row">				{/*aqui agregamos las tareas */}
+				<div className="col s4"> {/*detalles del margen y tamano*/}
 
 					<div className="card">
 					<nav className="light-green	darken-6">
@@ -141,8 +195,8 @@ handleChangue(e) {
 						</div>
 					</div>
 				</div>
-			{/*aqui mos tramos las tareas */}
-				<div className="col s7">
+																	{/*aqui mostramos las tareas */}
+				<div className="col s8"  style ={{margin: '0px'}}> {/*detalles del margen y tamano*/}
 						<table>
 								<thead> 
 										<tr>
@@ -161,7 +215,7 @@ handleChangue(e) {
 														<button className = "btn light-red	darken-4">
 														<i className = "material-icons" onClick={() => this.deleteTask(task._id	)}> delete</i>
 														</button>
-														<button className = "btn light-green darken-6" style ={{margin: '4px'}}>
+														<button onClick	={() => this.editTask(task._id) } className = "btn light-green darken-6" style ={{margin: '4px'}}>
 														<i className = "material-icons"> edit </i>
 														</button>
 													</td>
