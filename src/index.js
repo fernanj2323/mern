@@ -1,7 +1,10 @@
+//este es el punto de entrada de webpack 
 //aqui va el codigo de nuestro servidor nodeJS hecho en express
-
 //inicializamos 
+/**/
 
+
+/*constantes*/
 const express = require('express');
 const app = express();
 const morgan = require('morgan');
